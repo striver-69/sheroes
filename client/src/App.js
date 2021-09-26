@@ -1,60 +1,63 @@
-import { useState, useEffect } from "react";
-import "./App.css";
+import { useState } from 'react';
+import './App.css';
+const axios = require('axios').default;
 
-// Components
-import Card from "./components/Card";
-import Pagination from "./components/Pagination";
+function App() {
+  const [search, setSearch] = useState('');
+  const [userArray, setUserArray] = useState([]);
+  const [result, setResult] = useState('');
+  const handleClick = () => {
+    setUserArray([...userArray, search]);
+    setSearch('');
+  };
 
-const App = ({ match }) => {
-  const pageNumber = match.params.pageNumber || 1;
-
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-
-  const [page, setPage] = useState(pageNumber);
-  const [pages, setPages] = useState(1);
-
-  useEffect(() => {
-    const fecthPosts = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/v1/posts?page=${page}`);
-
-        const { data, pages: totalPages } = await res.json();
-
-        setPages(totalPages);
-        setPosts(data);
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
-        setLoading(false);
-        setError("Some error occured");
-      }
-    };
-
-    fecthPosts();
-  }, [page]);
+  const handleInputChange = (e) => {
+    const re = /^-?\d+\.?\d*$|^\d*\.?\d+$/;
+    if (
+      e.target.value === '-' ||
+      e.target.value === '' ||
+      re.test(e.target.value)
+    ) {
+      setSearch(e.target.value);
+    }
+  };
+  const getSecondMaximumValue = () => {
+    axios
+      .post('/api', {
+        array: userArray,
+      })
+      .then((res) => {
+        setResult(res.data.secondMax);
+      })
+      .catch((e) => {
+        setResult(-1);
+      });
+  };
 
   return (
-    <div className="app">
-      {loading ? (
-        <h3 className="loading-text">Loading...</h3>
-      ) : error ? (
-        <h3 className="error-text">{error}</h3>
-      ) : (
-        <>
-          <Pagination page={page} pages={pages} changePage={setPage} />
-          <div className="app__posts">
-            {posts.map((post) => (
-              <Card key={post._id} post={post} />
-            ))}
-          </div>
-          <Pagination page={page} pages={pages} changePage={setPage} />
-        </>
-      )}
+    <div className="App">
+      <h1>Second Maximum Calculator Of An Array</h1>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {userArray.map((e, ind) => {
+          return (
+            <div style={{ margin: '10px' }} key={ind}>
+              {e}
+            </div>
+          );
+        })}
+      </div>
+      <input type="text" value={search} onChange={handleInputChange} />
+      <button onClick={handleClick}>Push Value</button>
+      <h2>The Second Maximum value is {result}</h2>
+      <button onClick={getSecondMaximumValue}>Get Second Maximum</button>
     </div>
   );
-};
+}
 
 export default App;
